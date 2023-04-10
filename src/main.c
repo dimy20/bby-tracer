@@ -19,6 +19,7 @@ const Vec3 BLUE = COLOR(0.5, 0.7, 1.0);
 const int img_w = 800;
 const double aspect_ratio = 16.0 / 9.0;
 const int img_h = (int)((double)img_w / aspect_ratio);
+#define SAMPLES_PER_PIXEL 50 // for antialiasing
 
 //Camera
 typedef struct{
@@ -45,11 +46,22 @@ int objs_count = 0;
 Point3 Ray_at(const Ray* ray, double t);
 RT_DEF bool Scene_ray_hits_obj(const Ray * ray, double t_min, double t_max, Hit_record * rec);
 
+RT_DEF double rand_d(){ return rand() / (RAND_MAX + 1.0); }
+RT_DEF double rand_d_range(double min, double max){ return min + (max - min) * rand_d(); };
+
+RT_DEF double clamp(double x, double min, double max){
+	if(x < min) return min;
+	if(x > max) return max;
+	return x;
+}
+
 RT_DEF void write_color(Color pixel_color){
 	uint8_t r, g, b;
-	r = (uint8_t)(255 * pixel_color.x);
-	g = (uint8_t)(255 * pixel_color.y);
-	b = (uint8_t)(255 * pixel_color.z);
+
+	r = (uint8_t)(255 * clamp(pixel_color.x / SAMPLES_PER_PIXEL, 0, 0.999));
+	g = (uint8_t)(255 * clamp(pixel_color.y / SAMPLES_PER_PIXEL, 0, 0.999));
+	b = (uint8_t)(255 * clamp(pixel_color.z / SAMPLES_PER_PIXEL, 0, 0.999));
+
 	fprintf(stdout, "%d %d %d\n", r, g, b);
 }
 
@@ -146,12 +158,17 @@ int main(){
 	for(int y = img_h -1; y >= 0; y--){
 		fprintf(stderr, "Scanlines remaining: %d\n", y);
 		for(int x = 0; x < img_w; x++){
-			double u = (double)x / (double)(img_w - 1);
-			double v = (double)y / (double)(img_h - 1);
-			Ray ray;
-			ray.origin = camera->origin;
-			ray.direction = Vec3_sub(camera_point(u, v), camera->origin);
-			Color pixel_color = ray_color(&ray);
+			Color pixel_color = COLOR(0, 0, 0);
+
+			for(int s = 0; s < SAMPLES_PER_PIXEL; s++){
+				double u = (double)(x + rand_d()) / (double)(img_w - 1);
+				double v = (double)(y + rand_d()) / (double)(img_h - 1);
+				Ray ray;
+				ray.origin = camera->origin;
+				ray.direction = Vec3_sub(camera_point(u, v), camera->origin);
+
+				pixel_color = Vec3_add(pixel_color, ray_color(&ray));
+			}
 			write_color(pixel_color);
 		}
 	}
