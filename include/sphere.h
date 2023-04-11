@@ -11,13 +11,12 @@
 typedef struct{
 	Point3 center;
 	double r;
-	Material_type material;
-	Color attenuation;
+	Material * material;
 }Sphere;
 
 bool Sphere_hit(const Sphere * sphere,
 					   const Ray * ray, double t_min,
 					   double t_max, Hit_record * rec);
 
-Sphere * create_sphere(Vec3 center, double r, Material_type material_type, Color attenuation);
+Sphere * create_sphere(Vec3 center, double r, Material * material);
 void destroy_sphere(Sphere * sphere);

@@ -14,6 +14,7 @@
 #define MAX_SCENE_OBJS 50
 #define MAX_DEPTH 50
 #define SAMPLES_PER_PIXEL 50 // for antialiasing
+#define MAX_MATERIALS 50
 
 const Vec3 WHITE = COLOR(1, 1, 1);
 const Vec3 BLUE = COLOR(0.5, 0.7, 1.0);
@@ -44,7 +45,7 @@ typedef struct{
 Camera * camera;
 Obj scene_objs[MAX_SCENE_OBJS];
 int objs_count = 0;
-extern Material materials[MATERIALS_NUM];
+Material * materials[MAX_MATERIALS];
 
 
 Point3 Ray_at(const Ray* ray, double t);
@@ -126,8 +127,10 @@ Color ray_color(const Ray* ray, int depth){
 		scatter_ray.origin = rec.p;
 		scatter_ray.direction = Vec3_sub(target, rec.p);
 
-		if(materials[rec.material].scatter(ray, &rec, &scatter_ray)){
-			return Vec3_mult(ray_color(&scatter_ray, depth - 1), rec.attenuation);
+		Material * material = rec.material;
+		if(material->scatter(material, ray, &rec, &scatter_ray)){
+			return Vec3_mult(ray_color(&scatter_ray, depth - 1), material->attenuation);
+
 		}
 		return COLOR(0, 0, 0);
 		//Vec3 color = COLOR(rec.normal.x + 1.0, rec.normal.y + 1.0, rec.normal.z + 1.0);
@@ -161,11 +164,11 @@ bool Scene_ray_hits_obj(const Ray * ray, double t_min, double t_max, Hit_record 
 	return hit;
 }
 
-RT_DEF void renderer_add_sphere(Vec3 center, double r, int material, Color attenuation){
+RT_DEF void renderer_add_sphere(Vec3 center, double r, Material * material){
 	if(objs_count + 1 < MAX_SCENE_OBJS){
 		Obj * obj = &scene_objs[objs_count++];
 		obj->type = OBJ_SPHERE;
-		obj->obj = create_sphere(center, r, material, attenuation);
+		obj->obj = create_sphere(center, r, material);
 	}
 }
 
@@ -181,17 +184,29 @@ RT_DEF void renderer_destroy_objs(){
 
 int main(){
 	memset(scene_objs, 0, sizeof(Obj));
-	initialize_materials();
 
-	Color ground = COLOR(0.8, 0.8, 0.0);
+	Material * ground_material = create_material(MATERIAL_LAMBERTIAN);
+	ground_material->attenuation = COLOR(0.8, 0.8, 0.0);
+	Material * center_material = create_material(MATERIAL_LAMBERTIAN);
+	center_material->attenuation = COLOR(0.7, 0.3, 0.3);
+	Material * left_material = create_material(MATERIAL_METAL);
+	Material * right_material = create_material(MATERIAL_METAL);
+
+	left_material->attenuation = COLOR(0.8, 0.8, 0.8);
+	left_material->fuzz = 0;
+
+	right_material->attenuation = COLOR(0.8, 0.6, 0.2);
+	right_material->fuzz = 0;
+
+	initialize_materials();
 	// ground
-	renderer_add_sphere(VEC3(0, -100.5, -1), 100, MATERIAL_LAMBERTIAN, ground);
+	renderer_add_sphere(VEC3(0, -100.5, -1), 100, ground_material);
 	// center sphere
-	renderer_add_sphere(VEC3(0, 0, -1), 0.5, MATERIAL_LAMBERTIAN, COLOR(0.7, 0.3, 0.3));
+	renderer_add_sphere(VEC3(0, 0, -1), 0.5, center_material);
 	// metal left
-	renderer_add_sphere(VEC3(-1.0, 0, -1), 0.5, MATERIAL_METAL, COLOR(0.8, 0.8, 0.8));
+	renderer_add_sphere(VEC3(-1.0, 0, -1), 0.5, left_material);
 	// metal right
-	renderer_add_sphere(VEC3(1.0, 0, -1), 0.5, MATERIAL_METAL, COLOR(0.8, 0.6, 0.2));
+	renderer_add_sphere(VEC3(1.0, 0, -1), 0.5, right_material);
 
 	// Camera
 	camera = create_camera(aspect_ratio);
@@ -218,4 +233,5 @@ int main(){
 
 	free(camera);
 	renderer_destroy_objs();
+	//render_destroy_materials();
 }

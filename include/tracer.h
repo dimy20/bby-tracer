@@ -2,6 +2,9 @@
 
 #include "vec.h"
 #include "utils.h"
+
+typedef struct Material Material;
+
 typedef enum{
 	OBJ_SPHERE
 }Obj_type;
@@ -16,7 +19,7 @@ typedef struct{
 	Vec3 normal;
 	double t;
 	bool front_face;
-	int material;
+	Material * material;
 	Color attenuation;
 }Hit_record;
 
