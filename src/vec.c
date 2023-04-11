@@ -23,3 +23,10 @@ inline Vec3 Vec3_normalize(Vec3 v){
 	return VEC3(v.x / len, v.y / len, v.z / len);
 }
 
+Vec3 unit_sphere_random_point(){
+	while(true){
+		Point3 p = VEC3_RANDOM_RANGE(-1, 1);
+		if(VEC3_LENGTH_SQUARED(p) >= 1) continue;
+		return p;
+	}
+}

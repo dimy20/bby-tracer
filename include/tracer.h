@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vec.h"
+#include "utils.h"
 typedef enum{
 	OBJ_SPHERE
 }Obj_type;
