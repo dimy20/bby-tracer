@@ -16,5 +16,7 @@ typedef struct{
 	Vec3 normal;
 	double t;
 	bool front_face;
+	int material;
+	Color attenuation;
 }Hit_record;
 

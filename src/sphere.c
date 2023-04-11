@@ -2,12 +2,14 @@
 
 extern Vec3 Ray_at(const Ray * ray, double t);
 
-Sphere * create_sphere(Vec3 center, double r){
+Sphere * create_sphere(Vec3 center, double r, Material_type material_type, Color attenuation){
 	Sphere * sphere = malloc(sizeof(Sphere));
 	assert(sphere != NULL);
 
 	sphere->r = r;
 	sphere->center = center;
+	sphere->material = material_type;
+	sphere->attenuation = attenuation;
 
 	return sphere;
 }
@@ -39,6 +41,8 @@ bool Sphere_hit(const Sphere * sphere,
 	Vec3 outward_normal  = Vec3_normalize(Vec3_sub(rec->p, sphere->center));
 	rec->front_face = Vec3_dot(ray->direction, outward_normal) < 0;
 	rec->normal = rec->front_face ? outward_normal : Vec3_neg(outward_normal);
+	rec->attenuation = sphere->attenuation;
+	rec->material = sphere->material;
 
 	return true;
 }

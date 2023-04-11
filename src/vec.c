@@ -12,6 +12,12 @@ inline Vec3 Vec3_mult(Vec3 a, Vec3 b){ return VEC3(a.x * b.x, a.y * b.y, a.z * b
 
 inline double Vec3_dot(Vec3 a, Vec3 b){ return a.x * b.x + a.y * b.y + a.z * b.z; }
 
+inline Vec3 Vec3_reflect(Vec3 v, Vec3 normal){
+	double b_length = 2 * Vec3_dot(v, normal);
+	Vec3 b = Vec3_scale(normal, b_length);
+	return Vec3_sub(v, b);
+}
+
 inline Vec3 cross(Vec3 a , Vec3 b) {
 	return VEC3(a.A[1] * b.A[2] - a.A[2] * b.A[1],
 				a.A[2] * b.A[0] - a.A[0] * b.A[2],
